@@ -31,6 +31,9 @@ __DEVICE__ inline float _sign(float x);
                   make_float3(0.212639078498f, 0.715168714523f, 0.072192311287f),                                                          \
                   make_float3(0.019330825657f, 0.119194783270f, 0.950532138348f));
 
-__DEVICE__ inline float3 NonLinearGamutMapping(float3 in, float p, float m, float t0);
+__DEVICE__ inline float3x3 simpleHueMatrix(float red, float green, float blue);
+
+__DEVICE__ inline float lumMask(float3 rgb, float redw, float greenw, float bluew);
+
 
 #endif

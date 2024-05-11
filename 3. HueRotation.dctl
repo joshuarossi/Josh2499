@@ -3,8 +3,33 @@
 #include "utilities.h"
 #include "utilities.c"
 
-__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
-{
-  float3 rgb = make_float3(p_R, p_G, p_B);
-  return rgb;
+// Rotate hue flight
+// mainly rotate red primary, to the right is warmer/orange, and to the left colder/magenta
+DEFINE_UI_PARAMS(rot_r, Overall Rotate Hue R -, DCTLUI_SLIDER_FLOAT, 0.05, -0.5, 0.5, 0.1)
+// mainly rotate green primary, to the right is warmer/yellow, and to the left colder/cyan
+DEFINE_UI_PARAMS(rot_g, G |, DCTLUI_SLIDER_FLOAT, 0.05, -0.5, 0.5, 0.1)
+// mainly rotate blue primary, to the right is colder/cyan, and to the left is warmer/magenta
+DEFINE_UI_PARAMS(rot_b, B |, DCTLUI_SLIDER_FLOAT, 0.23, -0.5, 0.5, 0.1)
+
+// Highligh rotation direction is the same as the overall hue rotate, but it mainly affect bright values
+DEFINE_UI_PARAMS(rot_rh, Highlight Rotate Hue R -, DCTLUI_SLIDER_FLOAT, 0.0, -0.5, 0.5, 0.1)
+DEFINE_UI_PARAMS(rot_gh, G |, DCTLUI_SLIDER_FLOAT, 0.3, -0.5, 0.5, 0.1)
+DEFINE_UI_PARAMS(rot_bh, B |, DCTLUI_SLIDER_FLOAT, -0.02, -0.5, 0.5, 0.1)
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {   
+        float3 rgb = make_float3(p_R, p_G, p_B);
+        // TODO: Need to figure out what to do about these weights that are hardcoded Rec709
+        float lum = lumMask(rgb, 0.2196f, 0.4f, 0.3765f);
+        // Calculate two hue matrices, these matrices can't create negatives as this would break things later one, one will be applied as it
+        // is and the other one will use the mask apply it
+        float3x3 M1 = simpleHueMatrix(rot_rh, rot_gh, rot_bh);
+        float3x3 M2 = simpleHueMatrix(rot_r, rot_g, rot_b);
+
+        // apply the "highlight" hue matrix
+        // mix the pre-highlight matrix and the post-matrix using the lum
+        rgb = _mix(rgb, vdot(M1,rgb), lum);
+
+        // apply the overall  hue matrix
+        rgb = vdot(M2,rgb);
+        return rgb;
 }

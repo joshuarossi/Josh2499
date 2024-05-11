@@ -97,17 +97,35 @@ __DEVICE__ inline float _sign(float x) {
     return 0.0f;
 }
 
-__DEVICE__ inline float3 NonLinearGamutMapping(float3 in, float p, float m, float t0) {
+__DEVICE__ inline float3x3 simpleHueMatrix(float red, float green, float blue) {
 
-    float mx = max3(in.x, in.y, in.z);
+    float3 redcoeff = make_float3(1, green > 0 ? green : 0, blue < 0 ? -blue : 0);
+    float3 greencoeff = make_float3(red > 0 ? red : 0, 1, blue > 0 ? blue : 0);
+    float3 bluecoeff = make_float3(red < 0 ? -red : 0, green < 0 ? -green : 0, 1);
 
-    float3 rats;
-    rats.x = mx == 0.0f ? 0.0f: in.x/mx;
-    rats.y = mx == 0.0f ? 0.0f: in.y/mx;
-    rats.z = mx == 0.0f ? 0.0f: in.z/mx;
-    rats = powerptoef3f(rats, p, m, t0);
+    float3 white;
+    white.x = 1 + redcoeff.y + redcoeff.z;
+    white.y = greencoeff.x + 1 + greencoeff.z;
+    white.z = bluecoeff.x + bluecoeff.y + 1;
 
-    float3 out = rats * mx;
+    redcoeff = redcoeff / white.x;
+    greencoeff = greencoeff / white.y;
+    bluecoeff = bluecoeff / white.z;
 
-    return out;
+    float3x3 M = make_float3x3(redcoeff, greencoeff, bluecoeff);
+
+    return M;
+}
+
+__DEVICE__ inline float lumMask(float3 rgb, float redw, float greenw, float bluew) {
+
+    float3 weights = make_float3(redw, greenw, bluew);
+    weights *= rgb;
+    float lum = weights.x + weights.y + weights.z; // take the norm
+
+    lum = _powf((lum / (lum + 1.16820931127f)), 1.1f);
+    lum = lum * lum / (lum + 0.01f);
+    lum = _powf(lum, 2.5) * (1 - lum) + lum * lum;
+
+    return lum;
 }
