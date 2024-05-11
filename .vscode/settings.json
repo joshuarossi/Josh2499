@@ -1,0 +1,6 @@
+{
+  "files.associations": {
+    "*.wpml": "xml",
+    "*.dctl": "c"
+  }
+}
