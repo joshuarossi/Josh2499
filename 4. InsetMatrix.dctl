@@ -1,0 +1,10 @@
+#line 2 "1. InsetMatrix.dctl"
+
+#include "utilities.h"
+#include "utilities.c"
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
+{
+  float3 rgb = make_float3(p_R, p_G, p_B);
+  return rgb;
+}
