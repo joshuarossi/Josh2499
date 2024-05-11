@@ -11,3 +11,34 @@ So, I am playing with the idea of splitting out the math of transforming between
 
 TODOS:
 I have to figure out what is going on with Rec709 inside some of the functions, and I am not sure if I will just keep using that or make it selectable, or pick one that I think works. That is the last open question.
+
+## Operations
+
+----------------- Decode -----------------------------
+
+1. Convert to Davinci Wide Gamut Linear
+2. Convert to XYZ Color Space
+3. Convert to Rec709 color space
+   ----------------- Step 1 -----------------------------
+4. Calculate a Saturation Mask
+5. Apply the Saturation Mask to the Rec709 image using a power function so it most affects the most saturated areas
+   ----------------- Step 2 -----------------------------
+6. Apply NonLinearGamutMapping
+7. Apply an energy correction from the image before the NonLinearGamutMapping
+   ----------------- Step 3 -----------------------------
+8. Create a luminance Mask
+9. Create 2 HueMatrixes to represent Hue rotations
+10. Apply the HueMatrixes to the image, then mix that with the original image using the luminance mask
+11. Apply the second HueMatrix to the image
+12. Restore the energy using the image before the hue adjustments (similar to 7)
+13. Clamp the values to avoid negatives
+    ----------------- Step 4 -----------------------------
+14. Apply the simpleInsetMatrix (line 548)
+15. Clamp the values to avoid negatives
+    ----------------- Step 5 -----------------------------
+16. Apply the modifiedDanieleCurve
+    ----------------- Step 6 -----------------------------
+17. Apply the simpleInsetMatrix to provide preferential Purity
+    ----------------- Encode -----------------------------
+18. Scale the image using the wp_gains
+19. Encode for display
