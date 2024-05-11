@@ -12,6 +12,8 @@ So, I am playing with the idea of splitting out the math of transforming between
 TODOS:
 I have to figure out what is going on with Rec709 inside some of the functions, and I am not sure if I will just keep using that or make it selectable, or pick one that I think works. That is the last open question.
 
+![Image Description](NodeGraph.png)
+
 ## Operations
 
 ----------------- Decode -----------------------------
