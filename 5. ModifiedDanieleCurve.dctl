@@ -6,5 +6,7 @@
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
 {
   float3 rgb = make_float3(p_R, p_G, p_B);
+  rgb = modifiedDanieleCurve(rgb,0.18,0.1,1,1.15,0.04,0);
+
   return rgb;
 }

@@ -3,8 +3,15 @@
 #include "utilities.h"
 #include "utilities.c"
 
+// Increase purity of the primaries individually, higher value is more pure,reducing the slider can help in case of very chromatic values
+// breaking(99% of cases the default is smooth enough)
+DEFINE_UI_PARAMS(rsat, Purity R -, DCTLUI_SLIDER_FLOAT, 0.258, 0.0, 1, 0.001)
+DEFINE_UI_PARAMS(gsat, G | , DCTLUI_SLIDER_FLOAT, 0.652, 0.0, 1, 0.001)
+DEFINE_UI_PARAMS(bsat, B | , DCTLUI_SLIDER_FLOAT, 0.185, 0.0, 1, 0.001)
+
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
 {
   float3 rgb = make_float3(p_R, p_G, p_B);
+  rgb = vdot(simpleInsetMatrix(rsat / 10, gsat / 10, bsat / 10, 1),rgb);
   return rgb;
 }

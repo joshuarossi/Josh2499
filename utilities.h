@@ -29,11 +29,20 @@ __DEVICE__ inline float _sign(float x);
 #define matrix_rec709_to_xyz                                                                                                               \
     make_float3x3(make_float3(0.412390917540f, 0.357584357262f, 0.180480793118f),                                                          \
                   make_float3(0.212639078498f, 0.715168714523f, 0.072192311287f),                                                          \
-                  make_float3(0.019330825657f, 0.119194783270f, 0.950532138348f));
+                  make_float3(0.019330825657f, 0.119194783270f, 0.950532138348f))
 
 __DEVICE__ inline float3x3 simpleHueMatrix(float red, float green, float blue);
 
 __DEVICE__ inline float lumMask(float3 rgb, float redw, float greenw, float bluew);
 
+__DEVICE__ float3 inline modifiedDanieleCurve(float3 rgb, float mx,float my,float py,float g,float o, int inv);
+
+__DEVICE__ inline float3 maxf3(float b, float3 a);
+
+__DEVICE__ inline float3 EnergyCorrection(float3 pre, float3 post,float3x3 mt);
+
+__DEVICE__ inline float3 avgweights(float3x3 mt);
+
+__DEVICE__ inline float3x3 transpose_f33(float3x3 A);
 
 #endif

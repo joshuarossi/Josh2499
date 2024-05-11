@@ -27,9 +27,11 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
 
         // apply the "highlight" hue matrix
         // mix the pre-highlight matrix and the post-matrix using the lum
-        rgb = _mix(rgb, vdot(M1,rgb), lum);
+        float3 m = _mix(rgb, vdot(M1,rgb), lum);
 
         // apply the overall  hue matrix
-        rgb = vdot(M2,rgb);
-        return rgb;
+        float3 hue = vdot(M2,m);
+        float3 ec = EnergyCorrection(rgb, hue,matrix_rec709_to_xyz);
+        float3 out = maxf3(0, ec);
+        return out;
 }
