@@ -202,3 +202,13 @@ __DEVICE__ inline float3 avgweights(float3x3 mt) {
 
     return weights;
 }
+
+__DEVICE__ inline float3x3 transpose_f33(float3x3 A) {
+
+    float3x3 B = A;
+    A.x = make_float3(B.x.x, B.y.x, B.z.x);
+    A.y = make_float3(B.x.y, B.y.y, B.z.y);
+    A.z = make_float3(B.x.z, B.y.z, B.z.z);
+
+    return A;
+}
