@@ -132,9 +132,9 @@ __DEVICE__ inline float lumMask(float3 rgb, float redw, float greenw, float blue
 
 __DEVICE__ float3 inline modifiedDanieleCurve(float3 rgb, float mx,float my,float py,float g,float o, int inv) {
 
-    float mi = 0.5*(my + _sqrtf( my * my + 4 * my * o));
-    float pi = 0.5*(py + _sqrtf( py * py + 4 * py * o));
-    float s = ((1-_powf(mi/pi,1/g))/_powf(mi/pi,1/g))*mx;
+    float mi = 0.5 * (my + _sqrtf( my * my + 4 * my * o));
+    float pi = 0.5 * (py + _sqrtf( py * py + 4 * py * o));
+    float s = ((1-_powf(mi/pi,1/g))/_powf(mi/pi,1/g)) * mx;
 
     if (inv == 1) {
         rgb.x = 0.5 * (rgb.x + _sqrtf(rgb.x * rgb.x + rgb.x * 4 * o));
@@ -151,12 +151,12 @@ __DEVICE__ float3 inline modifiedDanieleCurve(float3 rgb, float mx,float my,floa
 
     } else {
         rgb.x = pi * _powf(rgb.x / (rgb.x + s), g);
-        rgb.y = pi *_powf(rgb.y / (rgb.y + s), g);
-        rgb.z = pi *_powf(rgb.z / (rgb.z + s), g);
+        rgb.y = pi * _powf(rgb.y / (rgb.y + s), g);
+        rgb.z = pi * _powf(rgb.z / (rgb.z + s), g);
 
-        rgb.x = rgb.x*rgb.x/(rgb.x + o);
-        rgb.y = rgb.y*rgb.y/(rgb.y + o);
-        rgb.z = rgb.z*rgb.z/(rgb.z + o);
+        rgb.x = rgb.x * rgb.x/(rgb.x + o);
+        rgb.y = rgb.y * rgb.y/(rgb.y + o);
+        rgb.z = rgb.z * rgb.z/(rgb.z + o);
         return rgb;
     }
 
@@ -201,14 +201,4 @@ __DEVICE__ inline float3 avgweights(float3x3 mt) {
     weights /= 3.0f;
 
     return weights;
-}
-
-__DEVICE__ inline float3x3 transpose_f33(float3x3 A) {
-
-    float3x3 B = A;
-    A.x = make_float3(B.x.x, B.y.x, B.z.x);
-    A.y = make_float3(B.x.y, B.y.y, B.z.y);
-    A.z = make_float3(B.x.z, B.y.z, B.z.z);
-
-    return A;
 }

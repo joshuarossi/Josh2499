@@ -1,6 +1,8 @@
 {
   "files.associations": {
     "*.wpml": "xml",
-    "*.dctl": "c"
-  }
+    "*.dctl": "c",
+    "cmath": "c"
+  },
+  "C_Cpp.errorSquiggles": "disabled"
 }
