@@ -1,8 +1,8 @@
 #line 2 "dynamic_range_compressor.dctl"
 
 // add ui elements for upper and lower bounds
-DEFINE_UI_PARAMS(lower, l, DCTLUI_SLIDER_INT, 2, 0, 5, 1)
-DEFINE_UI_PARAMS(upper, u, DCTLUI_SLIDER_INT, 2, 0, 5, 1)
+DEFINE_UI_PARAMS(lower, lower, DCTLUI_SLIDER_FLOAT, 2.0, -20.0, 20.0, 0.5)
+DEFINE_UI_PARAMS(upper, upper, DCTLUI_SLIDER_FLOAT, 2.0, -20.0, 20.0, 0.5)
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, __TEXTURE__ p_TexR, __TEXTURE__ p_TexG, __TEXTURE__ p_TexB)
 {
     // Variables to hold the sum of luminance values and total number of pixels
@@ -41,8 +41,8 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, __TEXTU
         float averageLuminance = _tex2D(p_TexR, 0, 0); // Assuming average luminance is stored in the red channel of pixel (0,0)
 
         // Calculate the luminance stops
-        float lowerBound = averageLuminance * 4.0; // 2 stops under
-        float upperBound = averageLuminance / 4.0; // 2 stops over
+        float lowerBound = averageLuminance / pow(2.0, float(lower)); // Stops under
+        float upperBound = averageLuminance * pow(2.0, float(upper));  // Stops over
 
         // Fetch the RGB values of the current pixel
         float r = _tex2D(p_TexR, p_X, p_Y);
