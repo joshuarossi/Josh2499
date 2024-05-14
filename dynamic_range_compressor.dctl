@@ -1,0 +1,67 @@
+#line 2 "dynamic_range_compressor.dctl"
+
+// add ui elements for upper and lower bounds
+DEFINE_UI_PARAMS(lower, l, DCTLUI_SLIDER_INT, 2, 0, 5, 1)
+DEFINE_UI_PARAMS(upper, u, DCTLUI_SLIDER_INT, 2, 0, 5, 1)
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, __TEXTURE__ p_TexR, __TEXTURE__ p_TexG, __TEXTURE__ p_TexB)
+{
+    // Variables to hold the sum of luminance values and total number of pixels
+    float totalLuminance = 0.0;
+    int totalPixels = p_Width * p_Height;
+
+    // Only calculate the average luminance if we are processing pixel (0,0)
+    if (p_X == 0 && p_Y == 0)
+    {
+        for (int y = 0; y < p_Height; y+5)
+        {
+            for (int x = 0; x < p_Width; x+5)
+            {
+                // Fetch the RGB values of the current pixel
+                float r = _tex2D(p_TexR, x, y);
+                float g = _tex2D(p_TexG, x, y);
+                float b = _tex2D(p_TexB, x, y);
+
+                // Calculate the luminance of the current pixel
+                float luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+                // Add the luminance to the total
+                totalLuminance += luminance;
+            }
+        }
+
+        // Calculate the average luminance
+        float averageLuminance = totalLuminance / totalPixels;
+
+        // Store the average luminance in pixel (0,0)
+        return make_float3(averageLuminance, averageLuminance, averageLuminance);
+    }
+    else
+    {
+        // Fetch the average luminance stored in pixel (0,0)
+        float averageLuminance = _tex2D(p_TexR, 0, 0); // Assuming average luminance is stored in the red channel of pixel (0,0)
+
+        // Calculate the luminance stops
+        float lowerBound = averageLuminance * 4.0; // 2 stops under
+        float upperBound = averageLuminance / 4.0; // 2 stops over
+
+        // Fetch the RGB values of the current pixel
+        float r = _tex2D(p_TexR, p_X, p_Y);
+        float g = _tex2D(p_TexG, p_X, p_Y);
+        float b = _tex2D(p_TexB, p_X, p_Y);
+
+        // Calculate the luminance of the current pixel
+        float luminance = 0.2126 * r + 0.7152 * g + 0.0722 * b;
+
+        // Scale the pixel values to be within the luminance stops
+        float scale = (luminance - lowerBound) / (upperBound - lowerBound);
+        scale = clamp(scale, 0.0, 1.0); // Ensure the scale is between 0 and 1
+
+        // Apply the scale to the original pixel values
+        r *= scale;
+        g *= scale;
+        b *= scale;
+
+        // Return the scaled values
+        return make_float3(r, g, b);
+    }
+}
