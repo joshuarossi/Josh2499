@@ -3,18 +3,22 @@
 // add ui elements for upper and lower bounds
 DEFINE_UI_PARAMS(lower, lower, DCTLUI_SLIDER_FLOAT, 2.0, -20.0, 20.0, 0.5)
 DEFINE_UI_PARAMS(upper, upper, DCTLUI_SLIDER_FLOAT, 2.0, -20.0, 20.0, 0.5)
+DEFINE_UI_PARAMS(x_sample, x_sample, DCTLUI_SLIDER_INT, 1, 1, 20, 1)
+DEFINE_UI_PARAMS(y_sample, y_sample, DCTLUI_SLIDER_INT, 1, 1, 20, 1)
+
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, __TEXTURE__ p_TexR, __TEXTURE__ p_TexG, __TEXTURE__ p_TexB)
 {
     // Variables to hold the sum of luminance values and total number of pixels
     float totalLuminance = 0.0;
     int totalPixels = p_Width * p_Height;
-
+    int x_sample_rate = x_sample;
+    int y_sample_rate = y_sample;
     // Only calculate the average luminance if we are processing pixel (0,0)
     if (p_X == 0 && p_Y == 0)
     {
-        for (int y = 0; y < p_Height; y+5)
+        for (int y = 0; y < p_Height; y+=x_sample_rate)
         {
-            for (int x = 0; x < p_Width; x+5)
+            for (int x = 0; x < p_Width; x+=y_sample_rate)
             {
                 // Fetch the RGB values of the current pixel
                 float r = _tex2D(p_TexR, x, y);
