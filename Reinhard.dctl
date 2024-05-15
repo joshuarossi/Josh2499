@@ -4,6 +4,8 @@
 DEFINE_UI_PARAMS(key, key, DCTLUI_SLIDER_FLOAT, 0.3, 0.0, 1.0, 0.01)
 DEFINE_UI_PARAMS(x_sample, x_sample, DCTLUI_SLIDER_INT, 5, 1, 20, 1)
 DEFINE_UI_PARAMS(y_sample, y_sample, DCTLUI_SLIDER_INT, 5, 1, 20, 1)
+DEFINE_UI_PARAMS(dynamic, Dynamic, DCTLUI_CHECK_BOX, 0)
+DEFINE_UI_PARAMS(staic_value, static_value, DCTLUI_SLIDER_FLOAT, 0.5, 0.0, 1.0, 0.001)
 DEFINE_UI_PARAMS(method, Clip, DCTLUI_CHECK_BOX, 0)
 
 // Main transform function
@@ -55,7 +57,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, __TEXTU
         float3 lab = xyzToLab(xyz);
 
         // Apply Reinhard tone mapping to the luminance
-        lab.x = reinhard(lab.x, averageLuminance * key, peakLuminance);
+        lab.x = reinhard(lab.x, averageLuminance * key, dynamic ? peakLuminance: staic_value);
 
         // Convert back to RGB
         xyz = labToXyz(lab);
