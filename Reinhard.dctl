@@ -1,7 +1,7 @@
 #line 2 "dynamic_range_compressor.dctl"
 #include "utilities.h"
 
-DEFINE_UI_PARAMS(key, key, DCTLUI_SLIDER_FLOAT, 0.3, 0.1, 1.0, 0.01)
+DEFINE_UI_PARAMS(key, key, DCTLUI_SLIDER_FLOAT, 0.3, 0.0, 1.0, 0.01)
 DEFINE_UI_PARAMS(x_sample, x_sample, DCTLUI_SLIDER_INT, 5, 1, 20, 1)
 DEFINE_UI_PARAMS(y_sample, y_sample, DCTLUI_SLIDER_INT, 5, 1, 20, 1)
 DEFINE_UI_PARAMS(method, Clip, DCTLUI_CHECK_BOX, 0)
