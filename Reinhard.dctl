@@ -9,9 +9,9 @@ DEFINE_UI_PARAMS(method, Clip, DCTLUI_CHECK_BOX, 0)
 // Main transform function
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, __TEXTURE__ p_TexR, __TEXTURE__ p_TexG, __TEXTURE__ p_TexB)
 {
-    // Variables to hold the peak luminance
+    // Variables to hold the peak and average luminance
     float peakLuminance = 0.0;
-
+    float averageLuminance = 0.0;
     // Only calculate the peak luminance if we are processing pixel (0,0)
     if (p_X == 0 && p_Y == 0)
     {
@@ -33,17 +33,18 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, __TEXTU
                 {
                     peakLuminance = luminance;
                 }
+                averageLuminance += luminance;
             }
         }
-
+        averageLuminance /= (p_Width * p_Height);
         // Store the peak luminance in pixel (0,0)
-        return make_float3(peakLuminance, peakLuminance, peakLuminance);
+        return make_float3(peakLuminance, averageLuminance, 0.00);
     }
     else
     {
         // Fetch the peak luminance stored in pixel (0,0)
         float peakLuminance = _tex2D(p_TexR, 0, 0); // Assuming peak luminance is stored in the red channel of pixel (0,0)
-
+        float averageLuminance = _tex2D(p_TexG, 0, 0); // Assuming average luminance is stored in the green channel of pixel (0,0)
         // Fetch the RGB values of the current pixel
         float r = _tex2D(p_TexR, p_X, p_Y);
         float g = _tex2D(p_TexG, p_X, p_Y);
@@ -54,7 +55,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, __TEXTU
         float3 lab = xyzToLab(xyz);
 
         // Apply Reinhard tone mapping to the luminance
-        lab.x = reinhard(lab.x, key, peakLuminance);
+        lab.x = reinhard(lab.x, averageLuminance * key, peakLuminance);
 
         // Convert back to RGB
         xyz = labToXyz(lab);
