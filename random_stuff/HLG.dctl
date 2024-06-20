@@ -1,0 +1,49 @@
+#line 2 "HLG_ODT.dctl"
+
+#include "utilities.h"
+#include "utilities.c"
+
+// Constants for HLG transfer functions
+#define HLG_A 0.17883277f
+#define HLG_B 0.28466892f
+#define HLG_C 0.55991073f
+#define HLG_PEAK_LUMINANCE 1000.0f
+
+__DEVICE__ float HLG_OETF_component(float linear)
+{
+    return linear > 1.0f / 12.0f ? HLG_A * log(12.0f * linear - HLG_B) + HLG_C : sqrt(3.0f * linear);
+}
+
+__DEVICE__ float3 HLG_OETF(float3 linear)
+{
+    float3 hlg;
+    hlg.x = HLG_OETF_component(linear.x);
+    hlg.y = HLG_OETF_component(linear.y);
+    hlg.z = HLG_OETF_component(linear.z);
+    return hlg;
+}
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
+{
+    // Load the input color
+    float3 rgb = make_float3(p_R, p_G, p_B);
+
+    // Calculate the luminance using the Rec. 2100 HLG coefficients
+    float luminance = 0.2627f * rgb.x + 0.6780f * rgb.y + 0.0593f * rgb.z;
+
+    // Apply the HLG OETF to the luminance
+    float hlgLuminance = HLG_OETF_component(luminance);
+
+    // Calculate the ratio of the new luminance to the old luminance
+    float luminanceRatio = hlgLuminance / (luminance + 1e-6f);
+
+    // Adjust the RGB values to match the new luminance
+    float3 hlgRGB = make_float3(rgb.x * luminanceRatio, rgb.y * luminanceRatio, rgb.z * luminanceRatio);
+
+    // Clamp the values to avoid artifacts
+    hlgRGB.x = clamp(hlgRGB.x, 0.0f, 1.0f);
+    hlgRGB.y = clamp(hlgRGB.y, 0.0f, 1.0f);
+    hlgRGB.z = clamp(hlgRGB.z, 0.0f, 1.0f);
+
+    return hlgRGB;
+}

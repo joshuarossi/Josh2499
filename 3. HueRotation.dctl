@@ -1,7 +1,5 @@
 #line 2 "3. HueRotation.dctl"
-
-#include "utilities.h"
-#include "utilities.c"
+#include "_2500.h"
 
 // Rotate hue flight
 // mainly rotate red primary, to the right is warmer/orange, and to the left colder/magenta
@@ -19,7 +17,8 @@ DEFINE_UI_PARAMS(rot_bh, B |, DCTLUI_SLIDER_FLOAT, -0.02, -0.5, 0.5, 0.1)
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {   
         float3 rgb = make_float3(p_R, p_G, p_B);
         // TODO: Need to figure out what to do about these weights that are hardcoded Rec709
-        float lum = lumMask(rgb, 0.2196f, 0.4f, 0.3765f);
+        float3 weights = avgweights(matrix_rec709_to_xyz);
+        float lum = lumMask(rgb, weights.x, weights.y, weights.z);
         // Calculate two hue matrices, these matrices can't create negatives as this would break things later one, one will be applied as it
         // is and the other one will use the mask apply it
         float3x3 M1 = simpleHueMatrix(rot_rh, rot_gh, rot_bh);
@@ -31,7 +30,7 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
 
         // apply the overall  hue matrix
         float3 hue = vdot(M2,m);
-        float3 ec = EnergyCorrection(rgb, hue,matrix_rec709_to_xyz);
+        float3 ec = EnergyCorrection(rgb, hue, matrix_rec709_to_xyz);
         float3 out = maxf3(0, ec);
         return out;
 }

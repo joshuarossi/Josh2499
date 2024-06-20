@@ -1,7 +1,5 @@
 #line 2 "6. Purity.dctl"
-
-#include "utilities.h"
-#include "utilities.c"
+#include "_2500.h"
 
 // Increase purity of the primaries individually, higher value is more pure,reducing the slider can help in case of very chromatic values
 // breaking(99% of cases the default is smooth enough)

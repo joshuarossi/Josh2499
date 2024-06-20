@@ -1,7 +1,5 @@
 #line 2 "2. NonLinearGamutMapping.dctl"
-
-#include "utilities.h"
-#include "utilities.c"
+#include "_2500.h"
 
 DEFINE_UI_PARAMS(p, P, DCTLUI_SLIDER_FLOAT, 0.03, 0, 1.5, 0.01)
 DEFINE_UI_PARAMS(m, M, DCTLUI_SLIDER_FLOAT, 0.0, 0.0, 0.99, 0.01)
@@ -14,5 +12,6 @@ __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p
   float3 nlgm = NonLinearGamutMapping(rgb, p, m, t);
   // TODO: Figure out what I should do about this, I don't want to use Rec709, but I don't know what to use instead
   float3 ec = EnergyCorrection(rgb,nlgm,matrix_rec709_to_xyz);
+  ec = maxf3(0, ec);
   return ec;
 }

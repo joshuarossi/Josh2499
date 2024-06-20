@@ -2,7 +2,14 @@
   "files.associations": {
     "*.wpml": "xml",
     "*.dctl": "c",
-    "cmath": "c"
+    "cmath": "c",
+    "__node_handle": "c",
+    "__locale": "c",
+    "functional": "c",
+    "algorithm": "c",
+    "utilities.h": "c",
+    "ios": "c",
+    "random": "c"
   },
   "C_Cpp.errorSquiggles": "disabled"
 }

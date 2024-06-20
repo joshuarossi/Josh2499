@@ -1,0 +1,22 @@
+#line 2 "1. exposure_bars.dctl"
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
+{
+  // 0.181, 1.0, 0.0
+  int SEGMENT_WIDTH = 179;
+  int BUFFER_WIDTH = 89;
+  int sectionWidth = SEGMENT_WIDTH + BUFFER_WIDTH;
+  int sectionIndex = p_X / sectionWidth;
+  int sectionPosition = p_X % sectionWidth;
+   if (sectionPosition < SEGMENT_WIDTH) {
+        // In a segment
+        // add  0.1732f for each section further
+        float R = (sectionIndex * 0.07f) + 0.07f;
+        float3 color = float3(R, R, R);
+        return color;
+    } else {
+        // In a buffer
+        float3 color = float3(0.0f, 0.0f, 0.0f);
+        return color;
+    }
+}

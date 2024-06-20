@@ -1,11 +1,14 @@
 #line 2 "4. InsetMatrix.dctl"
+#include "_2500.h"
 
-#include "utilities.h"
-#include "utilities.c"
+DEFINE_UI_PARAMS(r, R, DCTLUI_SLIDER_FLOAT, 0.0, 0.0, 1.0, 0.001)
+DEFINE_UI_PARAMS(g, G, DCTLUI_SLIDER_FLOAT, 0.04408, 0.0, 1.0, 0.00001)
+DEFINE_UI_PARAMS(b, B, DCTLUI_SLIDER_FLOAT, 0.0,0.0, 1.0, 0.001)
 
 __DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
 {
   float3 rgb = make_float3(p_R, p_G, p_B);
   rgb = vdot(simpleInsetMatrix(0, 0.04408, 0, 0),rgb);
+  rgb = maxf3(0, rgb);
   return rgb;
 }

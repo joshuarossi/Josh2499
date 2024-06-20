@@ -1,0 +1,17 @@
+#line 2 "7. OutputLin709.dctl"
+#include "_2500.h"
+
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B)
+{
+    float3 rgb = make_float3(p_R, p_G, p_B);
+    float3 out = NonLinearGamutMapping(rgb, 0.01f, 0.0f, 1.0f);
+    out = EnergyCorrection(rgb,out,matrix_rec709_to_xyz);
+    out = maxf3(0, out);
+
+    float3 linear_srgb = 1.0f - out;
+    out = linear_srgb;
+    linear_srgb = NonLinearGamutMapping(linear_srgb, 0.01f, 0.0f, 1.0f);
+    linear_srgb = EnergyCorrection(out,linear_srgb,matrix_rec709_to_xyz);
+    out = 1.0f - linear_srgb;
+    return out;
+}

@@ -1,7 +1,5 @@
 #line 2 "5. ModifiedDanieleCurve.dctl"
-
-#include "utilities.h"
-#include "utilities.c"
+#include "_2500.h"
 
 /*
 float mx,float my,float py,float g,float o

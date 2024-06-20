@@ -1,0 +1,168 @@
+#line 2
+#include "_2500.h"
+
+// clang-format off
+// Higher density value makes saturated values darker, lower values makes them brighter, achromatic is not affected
+DEFINE_UI_PARAMS(den, Density, DCTLUI_SLIDER_FLOAT, 1, 0, 1.5, 0.001)
+
+// Rotate hue flight
+// mainly rotate red primary, to the right is warmer/orange, and to the left colder/magenta
+DEFINE_UI_PARAMS(rot_r, Overall Rotate Hue R -, DCTLUI_SLIDER_FLOAT, 0.05, -0.5, 0.5, 0.1)
+// mainly rotate green primary, to the right is warmer/yellow, and to the left colder/cyan
+DEFINE_UI_PARAMS(rot_g, G |, DCTLUI_SLIDER_FLOAT, 0.05, -0.5, 0.5, 0.1)
+// mainly rotate blue primary, to the right is colder/cyan, and to the left is warmer/magenta
+DEFINE_UI_PARAMS(rot_b, B |, DCTLUI_SLIDER_FLOAT, 0.23, -0.5, 0.5, 0.1)
+
+// Highligh rotation direction is the same as the overall hue rotate, but it mainly affect bright values
+DEFINE_UI_PARAMS(rot_rh, Highlight Rotate Hue R -, DCTLUI_SLIDER_FLOAT, 0.0, -0.5, 0.5, 0.1)
+DEFINE_UI_PARAMS(rot_gh, G |, DCTLUI_SLIDER_FLOAT, 0.3, -0.5, 0.5, 0.1)
+DEFINE_UI_PARAMS(rot_bh, B |, DCTLUI_SLIDER_FLOAT, -0.02, -0.5, 0.5, 0.1)
+
+// Increase purity of the primaries individually, higher value is more pure,reducing the slider can help in case of very chromatic values
+// breaking(99% of cases the default is smooth enough)
+DEFINE_UI_PARAMS(rsat, Purity R -, DCTLUI_SLIDER_FLOAT, 0.258, 0.0, 1, 0.001)
+DEFINE_UI_PARAMS(gsat, G | , DCTLUI_SLIDER_FLOAT, 0.652, 0.0, 1, 0.001)
+DEFINE_UI_PARAMS(bsat, B | , DCTLUI_SLIDER_FLOAT, 0.185, 0.0, 1, 0.001)
+
+// Scale output by this much.
+DEFINE_UI_PARAMS(output_diffuse_white, HDR Peak White, DCTLUI_SLIDER_FLOAT, 300.0, 100.0, 1000.0, 10.0)
+//DEFINE_UI_PARAMS(highlight_desat, Desat Highlight, DCTLUI_SLIDER_FLOAT, 0.0, 0.0, 1.0, 0.01)
+
+// You can use this DCTL as an IDT plus ODT pipeline, one instance converts to 2499 LOG and then a second one converts LOG 2499 to P3d56 2.4
+// or BT1886,some grading operations are better as they are not made to handle them, 2499 LOG doesn't have any negative so its the great step for
+// those operations, for example blurring, sharpening, grain,halation ,split-toning, etc
+DEFINE_UI_PARAMS(output, Output, DCTLUI_COMBO_BOX, 0,{LIN,rec2020pq,rec2020hlg},{Rec709/Linear,Rec2020 ST2048 PQ  (P3 limited),Rec2020 HLG (P3 limited)x})
+DEFINE_UI_PARAMS(unroll, HDR method, DCTLUI_COMBO_BOX, 0, {gain_SDR, unroll_SDR}, {Gain SDR / Keep SDR Intent, Unroll SDR / Reform Image})
+
+// clang-format on
+__DEVICE__ float3 transform(int p_Width, int p_Height, int p_X, int p_Y, float p_R, float p_G, float p_B) {
+    float3 rgb = make_float3(p_R, p_G, p_B);
+
+    //check if there are infinite values and convert to the maximum value of a 16bit float , that is 65,500 no camera will produce this value, basically only for cg or synthetic images
+    // rgb.x = isinf(rgb.x)?6.55f*_powf(10.0f,4.0f):rgb.x;
+    // rgb.y = isinf(rgb.y)?6.55f*_powf(10.0f,4.0f):rgb.y;
+    // rgb.z = isinf(rgb.z)?6.55f*_powf(10.0f,4.0f):rgb.z;
+
+    // rgb.x = oetf_davinci_intermediate(rgb.x, 1);
+    // rgb.y = oetf_davinci_intermediate(rgb.y, 1);
+    // rgb.z = oetf_davinci_intermediate(rgb.z, 1);
+
+    // rgb = vdot(matrix_davinciwg_to_xyz, rgb);
+    // // TODO: Investigate this part here
+    // rgb = vdot(matrix_xyz_to_rec709, rgb);
+
+    // // calculates "saturation" using a mcAdams moment space
+    // float satm = satmask(rgb);
+
+    // // using the sat mask I create a very smooth function that can be used to multiply rgb ,more saturated gets more affected, close to
+    // // achromatic stays basically intact
+    // //  for best results the mask should be calculated before any gamut mapping
+    // satm = _powf(1 / (1 + 0.5 * satm * satm), den);
+
+    // // add density by multiply by rgb
+    // rgb *= satm;
+
+    // float3 rgb_copy = rgb;
+
+    /*
+    inspired by Jeds Smith OpenDRT gamut mapping, using a norm to divide rgb , those ration are then smoothly compressed to remove
+    zeros, this is not chromaticity linear, for me it seems to be a better option than to keep it chr linear, using weights to find the
+    ratio of energy before and after, this ratio has could be negative if the origin values are extremely chromatic, I use smooth toe
+    operation to bring those values to positve multiply the final energy ratio by the gamut mapped rgb
+    */
+
+    // rgb = NonLinearGamutMapping(rgb, 0.03f, 0.0f, 1.0f);
+    // rgb = EnergyCorrection(rgb_copy,rgb,matrix_rec709_to_xyz);
+
+    // make a copy of rgb that will be needed to restore the energy after the following operations
+    // float3 in = rgb;
+
+    // // Again using the energy weights to find a norm,I use a sigmoid that to create a mask from zero to one
+    // // These weights are found by the average of white balanced XYZ values for rec709, they can be calculated from the rec709 to XYZ
+    // // matrix,I see them as energy weights
+    // float3 weights = avgweights(matrix_rec709_to_xyz);
+    // float lum = lumMask(rgb, weights.x, weights.y, weights.z);
+
+    // // using the energy norm again and apply a sigmoid that will be used to desturate very emissive values
+    // //float desatlum = desat(rgb, weights.x, weights.y, weights.z, 1.0f,0.7f, 0.18f, 0.995f);
+
+    // // Calculate two hue matrices, these matrices can't create negatives as this would break things later one, one will be applied as it
+    // // is and the other one will use the mask apply it
+    // float3x3 M1 = simpleHueMatrix(rot_rh, rot_gh, rot_bh);
+    // float3x3 M2 = simpleHueMatrix(rot_r, rot_g, rot_b);
+
+    // // apply the "highlight" hue matrix
+    // // mix the pre-highlight matrix and the post-matrix using the lum
+    // rgb = _mix(rgb, vdot(M1,rgb), lum);
+
+    // // apply the overall  hue matrix
+    // rgb = vdot(M2,rgb);
+
+    // // Again!! calculate energy for the desturation of very emissive values
+    // //float norm = weights.x * rgb.x + weights.y * rgb.y + weights.z * rgb.z;
+
+    // //"hightlight" desat, this is a very small desat as the per-channel sigmoid latter on will also do it naturally, but this steps
+    // // really helps for images that clip a little early
+    // //rgb = _mix(make_float3(norm, norm, norm), rgb, desatlum)*highlight_desat+(1-highlight_desat)*rgb;
+
+    // // re-store the energy pre hue and desat operations
+    // rgb = EnergyCorrection(in, rgb,matrix_rec709_to_xyz);
+
+    // rgb = maxf3(0, rgb);
+    // ------------------------
+    // rgb = vdot(simpleInsetMatrix(0, 0.04408, 0.0, 0),rgb);
+    
+    // // for safety clip
+    // rgb = maxf3(0, rgb);
+
+    // I can know map to display using per-chanell sigmoid, I have 2 options , basecon is exactly like the current one used in ACES2
+    // rgb = modifiedDanieleCurve(rgb,0.18,0.1,1,1.15,0.04,0);
+
+    // Add some purity for preferential look
+    // rgb = vdot(simpleInsetMatrix(rsat / 10, gsat / 10, bsat / 10, 1),rgb);
+
+    float3 out;
+    // Encode for display
+    if (output == LIN){
+        // out = NonLinearGamutMapping(rgb, 0.01f, 0.0f, 1.0f);
+        // out = EnergyCorrection(rgb,out,matrix_rec709_to_xyz);
+        // out = maxf3(0, out);
+
+        // float3 linear_srgb = 1.0f - out;
+        // out = linear_srgb;
+        // linear_srgb = NonLinearGamutMapping(linear_srgb, 0.01f, 0.0f, 1.0f);
+        // linear_srgb = EnergyCorrection(out,linear_srgb,matrix_rec709_to_xyz);
+        // out = 1.0f - linear_srgb;
+        // out = vdot(matrix_rec709_to_xyz, out);
+        // out = vdot(matrix_xyz_to_davinciwg, out);
+        // out.x = oetf_davinci_intermediate(out.x, 0);
+        // out.y = oetf_davinci_intermediate(out.y, 0);
+        // out.z = oetf_davinci_intermediate(out.z, 0);
+        out = rgb;
+    }
+    else {
+        rgb = vdot(matrix_rec709_to_xyz, rgb);
+        rgb = vdot(inv_f33(matrix_p3d65_to_xyz), rgb);
+        out = NonLinearGamutMapping(rgb, 0.01f, 0.0f, 1.0f);
+        out = EnergyCorrection(rgb,out,matrix_p3d65_to_xyz);
+        out = maxf3(0, out);
+        float3 linear_p3 = 1.0f - out;
+        out = linear_p3;
+        linear_p3 = NonLinearGamutMapping(linear_p3, 0.01f, 0.0f, 1.0f);
+        linear_p3 = EnergyCorrection(out,linear_p3,matrix_p3d65_to_xyz);
+        out = 1.0f - linear_p3;
+        // Display White point scaling
+        float display_white_gain = output == rec2020pq ? (output_diffuse_white / 10000.0):output == rec2020hlg?(output_diffuse_white / 1000.0) : 1.0f;
+        float peak = output_diffuse_white / 100.0f;
+        float mg = 4.0f * peak / 225.0f + 37.0f / 450.f;
+        out = vdot(matrix_p3d65_to_xyz, out);
+        out = vdot(matrix_xyz_to_rec2020, out);
+        out = unroll == 1? unroll_highlight3(out,peak,0.1,mg) : out * display_white_gain;
+        if( unroll == 1 ){
+            out = output == rec2020pq? out/100.0f: out/10.0f;
+        }
+        out = maxf3(0.0f, out);
+        out = output == rec2020pq ? eotf_pq(out, 1):output == rec2020hlg?eotf_hlg(out,1):out;
+    }
+    return out;
+}

@@ -1,7 +1,5 @@
 #line 2 "1. SatMask.dctl"
-
-#include "utilities.h"
-#include "utilities.c"
+#include "_2500.h"
 
 DEFINE_UI_PARAMS(den, Density, DCTLUI_SLIDER_FLOAT, 1, 0, 1.5, 0.001)
 
